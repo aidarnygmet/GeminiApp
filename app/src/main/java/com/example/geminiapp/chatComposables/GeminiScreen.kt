@@ -1,4 +1,4 @@
-package com.example.geminiapp
+package com.example.geminiapp.chatComposables
 
 import androidx.compose.foundation.layout.Column
 import androidx.compose.material3.Button
@@ -11,8 +11,10 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.geminiapp.BuildConfig
+import com.example.geminiapp.GeminiViewModel
+import com.example.geminiapp.GeminiViewModelFactory
 import com.google.ai.client.generativeai.GenerativeModel
-import kotlinx.coroutines.runBlocking
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -23,7 +25,7 @@ fun GeminiScreen() {
         // Access your API key as a Build Configuration variable (see "Set up your API key" above)
         apiKey = BuildConfig.API_KEY
     )
-    val GeminiViewModel : GeminiViewModel= viewModel()
+    val GeminiViewModel : GeminiViewModel = viewModel(factory = GeminiViewModelFactory(generativeModel))
     var userInput by remember { mutableStateOf("") }
     var response  = GeminiViewModel.state.response
 
@@ -36,7 +38,7 @@ fun GeminiScreen() {
         )
         Button(onClick = {
             // Make your API call here using userInput
-            GeminiViewModel.onClick(generativeModel, userInput)
+            GeminiViewModel.onClick(userInput)
         }) {
             Text("Send")
         }
