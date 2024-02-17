@@ -16,7 +16,7 @@ import kotlinx.coroutines.launch
 
 class GeminiViewModel(model: GenerativeModel): ViewModel() {
     var state by mutableStateOf(GeminiState())
-    private var history = mutableListOf<Content>()
+    var history = mutableListOf<Content>()
     private val chat = model.startChat()
     fun onClick(prompt: String){
         if(state.userInput ==null || state.isLoading){

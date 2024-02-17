@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "177161535428",
+    "project_id": "gemini-chat-app",
+    "storage_bucket": "gemini-chat-app.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:177161535428:android:344df1b55941786a7bae91",
+        "android_client_info": {
+          "package_name": "com.example.geminiapp"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "177161535428-qr7qjke44acb7lvdkgqht8km9nekvmu3.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.geminiapp",
+            "certificate_hash": "b133a6bef254ffc5f951f7a5749fc66b2892ec5d"
+          }
+        },
+        {
+          "client_id": "177161535428-ar9831t99sne1sb35actfogik9m7ahl4.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBjXfwl144GcNgFnj2IGmV39ikfDGK5yUg"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "177161535428-ar9831t99sne1sb35actfogik9m7ahl4.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
