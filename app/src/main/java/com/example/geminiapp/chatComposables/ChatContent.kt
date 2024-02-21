@@ -24,7 +24,7 @@ fun ChatContent(modifier: Modifier, viewModel: GeminiViewModel){
     var messages by remember { mutableStateOf(emptyList<Message>()) }
     val firebaseManager = FirebaseManager()
     LaunchedEffect(Unit) {
-        firebaseManager.retrieveMessages(viewModel.chatId, viewModel.userId) { retrievedMessages ->
+        firebaseManager.retrieveMessagesListener(viewModel.chatId, viewModel.userId) { retrievedMessages ->
             messages = retrievedMessages
         }
     }

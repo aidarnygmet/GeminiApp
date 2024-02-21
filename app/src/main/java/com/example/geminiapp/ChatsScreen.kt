@@ -73,6 +73,7 @@ fun ChatsScreen(navController: NavController, userViewModel: UserViewModel){
 @Composable
 fun ChatEntry(navController: NavController, chat: Chat?, userId: String?){
     val context = LocalContext.current
+    val firebaseManager = FirebaseManager()
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -93,7 +94,14 @@ fun ChatEntry(navController: NavController, chat: Chat?, userId: String?){
     ){
         Text(text = chat?.topic?:"New Chat")
         if(chat != null){
-            Button(onClick = { /*TODO*/ }) {
+            Button(onClick = { firebaseManager.deleteChat(chatId = chat.chatId!!, userId = userId!!) {
+                if (it) {
+                    Log.d("check", "Chat delete succesfull")
+                } else {
+                    Log.d("check", "Chat delete failed")
+                }
+            }
+            }) {
                 Icon(imageVector = Icons.Default.Delete,contentDescription = null)
             }
         }

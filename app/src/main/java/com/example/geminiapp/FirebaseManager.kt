@@ -11,7 +11,7 @@ class FirebaseManager {
     private val chatsRef = database.getReference("chats")
 
     fun createChat(userId: String, onSuccess: (String) -> Unit, onError: (Exception) -> Unit){
-        Log.d("check", "FirebaseManager.createChat: userId $userId and chatsRef ${chatsRef}")
+        Log.d("check", "FirebaseManager.createChat: userId $userId and chatsRef $chatsRef")
         chatsRef.child(userId).addListenerForSingleValueEvent(object: ValueEventListener{
             override fun onDataChange(snapshot: DataSnapshot) {
                 if (!snapshot.exists()) {
@@ -48,9 +48,11 @@ class FirebaseManager {
                     userChats.child(userId).setValue(true)
                 }
                 for (chatSnapshot in snapshot.children) {
-                    val chatId = chatSnapshot.key.orEmpty()
-                    val topic = chatSnapshot.child("topic").getValue(String::class.java).orEmpty()
-                    chatList.add(Chat(topic = topic, chatId = chatId))
+                    if(chatSnapshot.hasChildren()){
+                        val chatId = chatSnapshot.key.orEmpty()
+                        val topic = chatSnapshot.child("topic").getValue(String::class.java).orEmpty()
+                        chatList.add(Chat(topic = topic, chatId = chatId))
+                    }
                 }
                 callback(chatList)
             }
@@ -82,9 +84,26 @@ class FirebaseManager {
             }
         })
     }
-    fun retrieveMessages(chatId: String, userId: String,callback: (List<Message>) -> Unit) {
+    fun retrieveMessagesAtOnce(chatId: String, userId: String,callback: (List<Message>) -> Unit) {
         val messagesRef = chatsRef.child(userId).child(chatId).child("messages")
+        messagesRef.addListenerForSingleValueEvent(object : ValueEventListener {
+            override fun onDataChange(snapshot: DataSnapshot) {
+                val messages = mutableListOf<Message>()
+                for (messageSnapshot in snapshot.children) {
+                    val message = messageSnapshot.getValue(Message::class.java)
+                    Log.d("check", "retrieveMessages: "+messageSnapshot.key+" "+message?.role+" "+message?.messageText)
+                    messages.add(message!!)
+                }
+                callback(messages)
+            }
 
+            override fun onCancelled(error: DatabaseError) {
+                // Handle error
+            }
+        })
+    }
+    fun retrieveMessagesListener(chatId: String, userId: String,callback: (List<Message>) -> Unit) {
+        val messagesRef = chatsRef.child(userId).child(chatId).child("messages")
         messagesRef.addValueEventListener(object : ValueEventListener {
             override fun onDataChange(snapshot: DataSnapshot) {
                 val messages = mutableListOf<Message>()
@@ -100,5 +119,26 @@ class FirebaseManager {
                 // Handle error
             }
         })
+    }
+    fun updateTopic(chatId: String, userId: String, topic:String, callback:(Boolean)->Unit){
+        val topicRef = chatsRef.child(userId).child(chatId).child("topic")
+        val c = topicRef.setValue(topic)
+        c.addOnCompleteListener {
+            if(it.isSuccessful){
+                callback(true)
+            } else {
+                callback(false)
+            }
+        }
+    }
+    fun deleteChat(chatId: String, userId: String, callback: (Boolean) -> Unit){
+        val task = chatsRef.child(userId).child(chatId).removeValue()
+        task.addOnCompleteListener {
+            if(it.isSuccessful){
+                callback(true)
+            } else {
+                callback(false)
+            }
+        }
     }
 }
