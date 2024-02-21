@@ -91,7 +91,7 @@ class FirebaseManager {
                 val messages = mutableListOf<Message>()
                 for (messageSnapshot in snapshot.children) {
                     val message = messageSnapshot.getValue(Message::class.java)
-                    Log.d("check", "retrieveMessages: "+messageSnapshot.key+" "+message?.role+" "+message?.messageText)
+                    Log.d("check", "retrieveMessagesAtOnce: "+messageSnapshot.key+" "+message?.role+" "+message?.messageText)
                     messages.add(message!!)
                 }
                 callback(messages)
@@ -109,7 +109,7 @@ class FirebaseManager {
                 val messages = mutableListOf<Message>()
                 for (messageSnapshot in snapshot.children) {
                     val message = messageSnapshot.getValue(Message::class.java)
-                    Log.d("check", "retrieveMessages: "+messageSnapshot.key+" "+message?.role+" "+message?.messageText)
+                    Log.d("check", "retrieveMessagesListener: "+messageSnapshot.key+" "+message?.role+" "+message?.messageText)
                     messages.add(message!!)
                 }
                 callback(messages)
@@ -140,5 +140,18 @@ class FirebaseManager {
                 callback(false)
             }
         }
+    }
+    fun retrieveTopic(chatId: String, userId: String,callback: (String) -> Unit){
+        chatsRef.child(userId).child(chatId).addListenerForSingleValueEvent(object: ValueEventListener{
+            override fun onDataChange(snapshot: DataSnapshot) {
+                val topic = snapshot.child("topic").getValue(String::class.java).orEmpty()
+                callback(topic)
+            }
+
+            override fun onCancelled(error: DatabaseError) {
+                callback("Fail")
+            }
+
+        })
     }
 }

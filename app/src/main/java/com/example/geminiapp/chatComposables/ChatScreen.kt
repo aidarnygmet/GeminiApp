@@ -15,7 +15,10 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Send
+import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -36,7 +39,10 @@ import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.navigation.NavController
+import com.example.geminiapp.FirebaseManager
 import com.example.geminiapp.GeminiViewModel
 import com.example.geminiapp.GeminiViewModelFactory
 import com.google.ai.client.generativeai.GenerativeModel
@@ -44,18 +50,35 @@ import com.google.ai.client.generativeai.GenerativeModel
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ChatScreen(model: GenerativeModel, chatId: String, userId: String) {
+fun ChatScreen(navController: NavController, model: GenerativeModel, chatId: String, userId: String) {
     val viewModel = GeminiViewModelFactory(model, chatId, userId).create(GeminiViewModel::class.java)
     var isInputFocused by remember { mutableStateOf(false) }
+    val firebaseManager = FirebaseManager()
+    var topic by remember {
+        mutableStateOf("")
+    }
+    firebaseManager.retrieveTopic(chatId, userId) {
+        topic = it
+    }
     Scaffold(bottomBar = {ChatBottomBar(
         onInputFocused = { isInputFocused = it },
         onSendClicked = { viewModel.onClick(it) }
     )},
         topBar = {
-            Text("Gemini")
+            Row{
+                Button(onClick = { navController.popBackStack() }) {
+                    Icon(imageVector = Icons.AutoMirrored.Filled.ArrowBack, contentDescription = null)
+                }
+                Text(topic,modifier = Modifier.weight(1f).padding(end = 8.dp),
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis)
+            }
+
         },
         content = {
-            ChatContent(modifier = Modifier.fillMaxSize().padding(bottom = 68.dp), viewModel = viewModel)
+            ChatContent(modifier = Modifier
+                .fillMaxSize()
+                .padding(bottom = 68.dp, top = 56.dp), viewModel = viewModel)
         }
     )
 //    Column {
@@ -143,8 +166,10 @@ fun ChatMessageInput(onSendClicked: (String) -> Unit,
             contentDescription = null,
             modifier = Modifier
                 .size(40.dp)
-                .clickable { onSendClicked(messageText)
-                    messageText = ""}
+                .clickable {
+                    onSendClicked(messageText)
+                    messageText = ""
+                }
                 .padding(4.dp),
             tint = MaterialTheme.colorScheme.primary
         )

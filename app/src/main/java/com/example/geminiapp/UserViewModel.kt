@@ -20,15 +20,17 @@ class UserViewModel: ViewModel() {
     fun getCurrentUser(): String{
         return _currentUser.value!!
     }
-    fun setChats() {
+    fun setChats(callback: (Boolean) -> Unit) {
         viewModelScope.launch {
             val firebaseManager = FirebaseManager()
             currentUser.value?.let {
                 firebaseManager.retrieveChats(it){ retrievedChats->
                     if (retrievedChats != null) {
                         _chats.value = retrievedChats
+                        callback(true)
                         Log.d("check", "User View Model ${retrievedChats.size}")
                     } else {
+                        callback(false)
                         Log.d("check", "Error Chats")
                     }
                 }

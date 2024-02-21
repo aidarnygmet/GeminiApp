@@ -145,7 +145,7 @@ class MainActivity : ComponentActivity() {
                         ){
                             val chatId = it.arguments?.getString("chatId")
                             val userId = auth.currentUser?.uid
-                            ChatScreen(model = generativeModel, chatId = chatId!!, userId = userId!!)
+                            ChatScreen(navController = navController, model = generativeModel, chatId = chatId!!, userId = userId!!)
                         }
                     }
                 }

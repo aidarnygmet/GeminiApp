@@ -5,6 +5,7 @@ import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -25,12 +26,16 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import androidx.navigation.NavHostController
@@ -38,13 +43,25 @@ import androidx.navigation.NavHostController
 @Composable
 fun ChatsScreen(navController: NavController, userViewModel: UserViewModel){
     val userId by userViewModel.currentUser
+    var chatsLoaded by remember {
+        mutableStateOf(false)
+    }
     LaunchedEffect(Unit){
-        userViewModel.setChats()
+        userViewModel.setChats(){
+            chatsLoaded = it
+        }
     }
     val chats by userViewModel.chats.collectAsState()
-    if(chats.isNotEmpty()){
+    if(chatsLoaded){
         Column {
-            ChatEntry(navController = navController, chat = null, userId = userViewModel.getCurrentUser())
+            Box(
+                modifier = Modifier.padding(16.dp)
+            ) {
+                ChatEntry(navController = navController, chat = null, userId = userViewModel.getCurrentUser())
+            }
+            if(chats.isEmpty()){
+                Text(text = "No chats yet\nStart chatting by pressing New Chat", fontWeight = FontWeight.Bold, textAlign = TextAlign.Center)
+            }
             LazyColumn(
                 modifier = Modifier
                     .fillMaxSize()
@@ -55,19 +72,10 @@ fun ChatsScreen(navController: NavController, userViewModel: UserViewModel){
                     Spacer(modifier = Modifier.height(8.dp))
                 }
             }
+
         }
     } else {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(16.dp),
-            verticalArrangement = Arrangement.Center,
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            val userId by userViewModel.currentUser
-            Text(text = "No chats yet\nStart chatting by pressing New Chat", fontWeight = FontWeight.Bold, textAlign = TextAlign.Center)
-            ChatEntry(navController = navController, chat = null, userId = userId)
-        }
+        Text("Loading")
     }
 }
 @Composable
@@ -90,9 +98,11 @@ fun ChatEntry(navController: NavController, chat: Chat?, userId: String?){
             }
             .padding(8.dp),
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.Start
+        horizontalArrangement = Arrangement.SpaceBetween
     ){
-        Text(text = chat?.topic?:"New Chat")
+        Text(text = chat?.topic?:"Start a New Chat", modifier = Modifier.weight(1f).padding(end = 8.dp),
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis)
         if(chat != null){
             Button(onClick = { firebaseManager.deleteChat(chatId = chat.chatId!!, userId = userId!!) {
                 if (it) {
