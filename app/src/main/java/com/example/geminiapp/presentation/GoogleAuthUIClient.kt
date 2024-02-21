@@ -3,6 +3,7 @@ package com.example.geminiapp.presentation
 import android.content.Context
 import android.content.Intent
 import android.content.IntentSender
+import android.util.Log
 import com.example.geminiapp.R
 import com.google.android.gms.auth.api.identity.BeginSignInRequest
 import com.google.android.gms.auth.api.identity.BeginSignInRequest.GoogleIdTokenRequestOptions
@@ -18,11 +19,12 @@ class GoogleAuthUIClient(private val context: Context,
     private val auth = Firebase.auth
     suspend fun signIn(): IntentSender?{
         val result = try {
-    oneTapClient.beginSignIn(
-        beginSignInRequest()
-    ).await()
+            oneTapClient.beginSignIn(
+                beginSignInRequest()
+            ).await()
         } catch (e: Exception){
             e.printStackTrace()
+            Log.d("check", "signIn")
             if (e is CancellationException) throw e
             null
         }
@@ -43,6 +45,7 @@ class GoogleAuthUIClient(private val context: Context,
             }, errorMessage = null)
         }catch (e: Exception){
             e.printStackTrace()
+            Log.d("check", "signInWithIntent")
             if (e is CancellationException) throw e
             SignInResult(data = null, errorMessage = e.message)
         }
@@ -63,6 +66,7 @@ class GoogleAuthUIClient(private val context: Context,
         profilePictureId = photoUrl?.toString())
     }
     private fun beginSignInRequest(): BeginSignInRequest{
+        Log.d("check", "beginSignInRequest: ${context.getString(R.string.oauth)}")
         return BeginSignInRequest.Builder()
             .setGoogleIdTokenRequestOptions(
                 GoogleIdTokenRequestOptions.builder()

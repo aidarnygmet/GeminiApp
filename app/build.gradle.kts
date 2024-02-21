@@ -3,7 +3,7 @@ plugins {
     id("org.jetbrains.kotlin.android")
     id("com.google.android.libraries.mapsplatform.secrets-gradle-plugin")
     id("com.google.gms.google-services")
-    id ("kotlin-kapt")
+    //id("com.google.devtools.ksp")
 }
 
 android {
@@ -83,6 +83,7 @@ dependencies {
     // Android 13 and below.
     implementation("androidx.credentials:credentials-play-services-auth:1.3.0-alpha01")
     implementation("androidx.appcompat:appcompat:1.6.1")
+    implementation("com.google.firebase:firebase-database-ktx:20.3.0")
 
     testImplementation("junit:junit:4.13.2")
     androidTestImplementation("androidx.test.ext:junit:1.1.5")

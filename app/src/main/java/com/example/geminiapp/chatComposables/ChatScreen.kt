@@ -4,7 +4,6 @@ import android.annotation.SuppressLint
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -16,9 +15,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.AddCircle
 import androidx.compose.material.icons.filled.Send
-import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -40,8 +37,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
-import com.example.geminiapp.BuildConfig
 import com.example.geminiapp.GeminiViewModel
 import com.example.geminiapp.GeminiViewModelFactory
 import com.google.ai.client.generativeai.GenerativeModel
@@ -49,9 +44,8 @@ import com.google.ai.client.generativeai.GenerativeModel
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun GeminiScreen(viewModel: GeminiViewModel) {
-    var userInput by remember { mutableStateOf("") }
-    var response  = viewModel.state.response
+fun ChatScreen(model: GenerativeModel, chatId: String, userId: String) {
+    val viewModel = GeminiViewModelFactory(model, chatId, userId).create(GeminiViewModel::class.java)
     var isInputFocused by remember { mutableStateOf(false) }
     Scaffold(bottomBar = {ChatBottomBar(
         onInputFocused = { isInputFocused = it },

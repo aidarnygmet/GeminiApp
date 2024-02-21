@@ -6,6 +6,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.google.ai.client.generativeai.Chat
 import com.google.ai.client.generativeai.GenerativeModel
 import com.google.ai.client.generativeai.type.Content
 import com.google.ai.client.generativeai.type.asTextOrNull
@@ -14,10 +15,22 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
 
-class GeminiViewModel(model: GenerativeModel): ViewModel() {
+class GeminiViewModel(model: GenerativeModel, chatId: String, userId: String): ViewModel() {
+    val model = model
+    val chatId = chatId
+    val userId = userId
+    private val firebaseManager = FirebaseManager()
     var state by mutableStateOf(GeminiState())
     var history = mutableListOf<Content>()
-    private val chat = model.startChat()
+    lateinit var chat : Chat
+    init {
+        firebaseManager.retrieveMessages(chatId = chatId, userId = userId) { retrievedMessages ->
+            retrievedMessages.map {
+                history.add(content(role = it.role) { text(it.messageText) })
+            }
+            chat = model.startChat(history = history)
+        }
+    }
     fun onClick(prompt: String){
         if(state.userInput ==null || state.isLoading){
             return
@@ -25,22 +38,13 @@ class GeminiViewModel(model: GenerativeModel): ViewModel() {
         viewModelScope.launch(Dispatchers.IO) {
             state = state.copy(isLoading = true)
             try {
-                var response = ""
-                history.add(content(role = "user"){text(prompt)})
-
-                chat.sendMessageStream(prompt).collect{chunk->
-                    response+=chunk.text
-                    state = state.copy(response = response)
-                    Log.d("GeminiViewModel", "Response: $response")
+                if(history.isEmpty()){
+                    val topic = chat.sendMessage("Generate topic for this chat: $prompt").text.toString()
                 }
-                history.add(content(role = "model"){text(response)})
-
-
-                history.forEach {
-                    it.parts.forEach {part->
-                        Log.d("GeminiViewModel", "History: ${part.asTextOrNull()}")
-                    }
-                }
+                firebaseManager.sendMessage("user", prompt, chatId, userId)
+                val response = chat.sendMessage(prompt).text.toString()
+                Log.d("check", "response: $response")
+                firebaseManager.sendMessage("model", response, chatId, userId)
             } catch (e: Exception) {
                 Log.e("GeminiViewModel", "Error: ${e.message}")
             } finally {

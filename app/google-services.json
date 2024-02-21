@@ -1,6 +1,7 @@
 {
   "project_info": {
     "project_number": "177161535428",
+    "firebase_url": "https://gemini-chat-app-default-rtdb.europe-west1.firebasedatabase.app",
     "project_id": "gemini-chat-app",
     "storage_bucket": "gemini-chat-app.appspot.com"
   },

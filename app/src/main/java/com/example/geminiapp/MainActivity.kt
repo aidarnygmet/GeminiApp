@@ -29,10 +29,12 @@ import androidx.credentials.PublicKeyCredential
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import com.example.geminiapp.chatComposables.GeminiScreen
+import androidx.navigation.navArgument
+import com.example.geminiapp.chatComposables.ChatScreen
 import com.example.geminiapp.presentation.GoogleAuthUIClient
 import com.example.geminiapp.presentation.SignInScreen
 import com.example.geminiapp.presentation.SignInViewModel
@@ -48,6 +50,8 @@ import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
 import com.google.android.libraries.identity.googleid.GoogleIdTokenParsingException
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.GoogleAuthProvider
+import com.google.firebase.auth.ktx.auth
+import com.google.firebase.ktx.Firebase
 import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
@@ -64,7 +68,16 @@ class MainActivity : ComponentActivity() {
             apiKey = BuildConfig.API_KEY,
             modelName = "gemini-pro"
         )
-        //val viewModel = GeminiViewModelFactory(generativeModel).create(GeminiViewModel::class.java)
+        val auth = Firebase.auth
+        var currentUserId = ""
+        var startDestination = "sign_in"
+        var userViewModel = UserViewModel()
+        if(auth.currentUser != null){
+            currentUserId = auth.currentUser!!.uid
+            userViewModel.setCurrentUser(currentUserId)
+            startDestination = Screen.Chats.route
+        }
+
         setContent {
             GeminiAppTheme {
                 // A surface container using the 'background' color from the theme
@@ -74,7 +87,7 @@ class MainActivity : ComponentActivity() {
                 ) {
                     //GeminiScreen(viewModel = viewModel)
                     val navController = rememberNavController()
-                    NavHost(navController = navController, startDestination = "sign_in"){
+                    NavHost(navController = navController, startDestination = startDestination){
                         composable("sign_in"){
                             val viewModel = viewModel<SignInViewModel>()
                             val state by viewModel.state.collectAsStateWithLifecycle()
@@ -88,6 +101,11 @@ class MainActivity : ComponentActivity() {
                                                 intent = result.data ?: return@launch
                                             )
                                             viewModel.onSignInResult(signInResult)
+                                            if(viewModel.state.value.isSignInSuccessful){
+                                                userViewModel.setCurrentUser(currentUserId)
+                                                navController.navigate(Screen.Chats.route)
+                                            }
+
                                         }
                                     }
                                 }
@@ -108,8 +126,26 @@ class MainActivity : ComponentActivity() {
                                             ).build()
                                         )
                                     }
+
                                 }
                                 )
+                        }
+                        composable(
+                            Screen.Chats.route
+                        ){
+                            ChatsScreen(navController = navController, userViewModel = userViewModel)
+                        }
+                        composable(
+                            Screen.Chat.route+"/{chatId}",
+                            arguments = listOf(
+                                navArgument("chatId") {
+                                    type = NavType.StringType
+                                }
+                            )
+                        ){
+                            val chatId = it.arguments?.getString("chatId")
+                            val userId = auth.currentUser?.uid
+                            ChatScreen(model = generativeModel, chatId = chatId!!, userId = userId!!)
                         }
                     }
                 }

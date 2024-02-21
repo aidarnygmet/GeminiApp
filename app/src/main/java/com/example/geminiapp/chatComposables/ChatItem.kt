@@ -18,22 +18,23 @@ import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import com.example.geminiapp.Message
 import com.google.ai.client.generativeai.type.Content
 import com.google.ai.client.generativeai.type.asTextOrNull
 
 @Composable
-fun ChatItem(content: Content) {
-    val alignment = if (content.role == "user") {
+fun ChatItem(message: Message) {
+    val alignment = if (message.role == "user") {
         Arrangement.End
     } else {
         Arrangement.Start
     }
-    val bubbleColor = if (content.role == "user") {
+    val bubbleColor = if (message.role == "user") {
         MaterialTheme.colorScheme.primaryContainer
     } else {
         MaterialTheme.colorScheme.secondaryContainer
     }
-    val textColor = if (content.role == "user") {
+    val textColor = if (message.role == "user") {
         MaterialTheme.colorScheme.onPrimaryContainer
     } else {
         MaterialTheme.colorScheme.onSecondaryContainer
@@ -53,7 +54,7 @@ fun ChatItem(content: Content) {
         ){
             Column(modifier = Modifier.background(bubbleColor)) {
                 Text(
-                    text = content.parts[0].asTextOrNull() ?: "",
+                    text = message.messageText,
                     color = textColor
                 )
             }
