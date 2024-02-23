@@ -39,6 +39,7 @@ import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
@@ -65,13 +66,19 @@ fun ChatScreen(navController: NavController, model: GenerativeModel, chatId: Str
         onSendClicked = { viewModel.onClick(it) }
     )},
         topBar = {
-            Row{
+            Row(
+                verticalAlignment = Alignment.CenterVertically
+            ){
                 Button(onClick = { navController.popBackStack() }) {
                     Icon(imageVector = Icons.AutoMirrored.Filled.ArrowBack, contentDescription = null)
                 }
-                Text(topic,modifier = Modifier.weight(1f).padding(end = 8.dp),
+                Spacer(modifier = Modifier.size(4.dp))
+                Text(topic,modifier = Modifier
+                    .weight(1f)
+                    .padding(end = 8.dp),
                     maxLines = 1,
-                    overflow = TextOverflow.Ellipsis)
+                    overflow = TextOverflow.Ellipsis
+                )
             }
 
         },
