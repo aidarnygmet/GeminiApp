@@ -14,11 +14,8 @@ class UserViewModel: ViewModel() {
     val currentUser: State<String?> = _currentUser
     private val _chats = MutableStateFlow<List<Chat>>(emptyList())
     val chats: StateFlow<List<Chat>> get() = _chats
-    fun setCurrentUser(user: String) {
+    fun setCurrentUser(user: String?) {
         _currentUser.value = user
-    }
-    fun getCurrentUser(): String{
-        return _currentUser.value!!
     }
     fun setChats(callback: (Boolean) -> Unit) {
         viewModelScope.launch {
@@ -26,9 +23,9 @@ class UserViewModel: ViewModel() {
             currentUser.value?.let {
                 firebaseManager.retrieveChats(it){ retrievedChats->
                     if (retrievedChats != null) {
-                        _chats.value = retrievedChats
+                        _chats.value = retrievedChats.reversed()
+                        Log.d("check", "chats are retrieved: ${currentUser.value}, ${_chats.value.size}")
                         callback(true)
-                        Log.d("check", "User View Model ${retrievedChats.size}")
                     } else {
                         callback(false)
                         Log.d("check", "Error Chats")

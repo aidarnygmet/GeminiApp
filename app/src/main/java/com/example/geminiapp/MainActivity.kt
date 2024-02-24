@@ -35,9 +35,11 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.example.geminiapp.chatComposables.ChatScreen
+import com.example.geminiapp.presentation.EmailSignInClient
 import com.example.geminiapp.presentation.GoogleAuthUIClient
 import com.example.geminiapp.presentation.SignInScreen
 import com.example.geminiapp.presentation.SignInViewModel
+import com.example.geminiapp.presentation.SignUpScreen
 import com.example.geminiapp.ui.theme.GeminiAppTheme
 import com.google.ai.client.generativeai.GenerativeModel
 import com.google.android.gms.auth.api.identity.BeginSignInRequest
@@ -53,6 +55,8 @@ import com.google.firebase.auth.GoogleAuthProvider
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.ktx.Firebase
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.tasks.await
+import java.util.concurrent.CancellationException
 
 class MainActivity : ComponentActivity() {
     private val googleAuthClient by lazy{
@@ -61,6 +65,7 @@ class MainActivity : ComponentActivity() {
             oneTapClient = Identity.getSignInClient(applicationContext)
         )
     }
+    private val emailSignInClient = EmailSignInClient()
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
@@ -69,12 +74,8 @@ class MainActivity : ComponentActivity() {
             modelName = "gemini-pro"
         )
         val auth = Firebase.auth
-        var currentUserId = ""
         var startDestination = "sign_in"
-        var userViewModel = UserViewModel()
         if(auth.currentUser != null){
-            currentUserId = auth.currentUser!!.uid
-            userViewModel.setCurrentUser(currentUserId)
             startDestination = Screen.Chats.route
         }
 
@@ -102,10 +103,8 @@ class MainActivity : ComponentActivity() {
                                             )
                                             viewModel.onSignInResult(signInResult)
                                             if(viewModel.state.value.isSignInSuccessful){
-                                                userViewModel.setCurrentUser(currentUserId)
                                                 navController.navigate(Screen.Chats.route)
                                             }
-
                                         }
                                     }
                                 }
@@ -117,7 +116,7 @@ class MainActivity : ComponentActivity() {
                             }
                             SignInScreen(
                                 state = state,
-                                onSignInClicked = {
+                                onGoogleSignInClicked = {
                                     lifecycleScope.launch {
                                         val signInIntent = googleAuthClient.signIn()
                                         launcher.launch(
@@ -126,14 +125,56 @@ class MainActivity : ComponentActivity() {
                                             ).build()
                                         )
                                     }
-
+                                },
+                                onSignInClicked = {email, password ->
+                                    emailSignInClient.signIn(email, password, onSuccess = {result->
+                                        viewModel.onSignInResult(result)
+                                        if(viewModel.state.value.isSignInSuccessful){
+                                            if(auth.currentUser != null){
+                                                Log.d("check", "signInResult ${auth.currentUser?.uid}")
+                                                navController.navigate(Screen.Chats.route)
+                                            }
+                                        }
+                                    },
+                                        onFailure = {
+                                            val e = it?.message
+                                            Toast.makeText(applicationContext, "SignIn Fail: $e", Toast.LENGTH_LONG).show()
+                                        })
+                                },
+                                onSignUpClicked = {
+                                    Log.d("check", "wtf")
+                                    navController.navigate(Screen.SignUp.route)
                                 }
                                 )
+                        }
+                        composable("sign_up"){
+                            SignUpScreen(navController = navController, onButtonClicked = { email, username, password->
+                                emailSignInClient.signUp(email, username, password, onSuccess = {result->
+                                    navController.navigate(Screen.Chats.route)
+                                }, onFailure = {
+                                    val e = it?.message
+                                    Toast.makeText(applicationContext, "SignIn Fail: $e", Toast.LENGTH_LONG).show()
+                                })
+                            })
                         }
                         composable(
                             Screen.Chats.route
                         ){
-                            ChatsScreen(navController = navController, userViewModel = userViewModel)
+                            var userViewModel = UserViewModel()
+                            if(auth.currentUser != null){
+                                Log.d("check", "launching chats screen ${auth.currentUser!!.uid}")
+                                userViewModel.setCurrentUser(auth.currentUser!!.uid)
+                            }
+                            ChatsScreen(navController = navController, userViewModel = userViewModel, onSignOut = {
+                                Log.d("check", "Sign Out")
+                                navController.navigate("sign_in")
+                                try {
+                                    auth.signOut()
+                                }catch (e: Exception){
+                                    e.printStackTrace()
+                                    if (e is CancellationException) throw e
+                                }
+                            })
                         }
                         composable(
                             Screen.Chat.route+"/{chatId}",

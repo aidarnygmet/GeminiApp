@@ -48,7 +48,7 @@ class FirebaseManager {
                     userChats.child(userId).setValue(true)
                 }
                 for (chatSnapshot in snapshot.children) {
-                    if(chatSnapshot.hasChildren()){
+                    if(chatSnapshot.hasChild("topic")){
                         val chatId = chatSnapshot.key.orEmpty()
                         val topic = chatSnapshot.child("topic").getValue(String::class.java).orEmpty()
                         chatList.add(Chat(topic = topic, chatId = chatId))
